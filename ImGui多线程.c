@@ -1,4 +1,9 @@
 //逸晨自写优化多线程
+//其中包涵PUBGM4.2防闪
+//使用前必须对接shadowhook渲染 以及Tool
+
+//Yichen self-writing optimizes multi-threading//including PUBGM4.2 anti-flash//shadowhook rendering and Tool must be performed before use.
+
 #include <pthread.h>
 #include <thread>
 #include <mutex>
