@@ -1,0 +1,391 @@
+<!-- by.77 -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ImGui RGBA 调色板</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+    color: #e0e0e0;
+    padding: 20px;
+    font-family: system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    background: rgba(30, 30, 46, 0.85);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 24px;
+    color: #ffffff;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .color-preview-wrapper {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAK0lEQVQ4T2NkYGD4z8DAwMgABXAGNgGwSgwVAFbmAgXQdISfAAAAABJRU5ErkJggg==') repeat;
+  }
+  #color-preview {
+    width: 100%;
+    height: 100%;
+    transition: background 0.2s ease;
+  }
+  #color {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  /* 新增：图片上传取色样式 */
+  .image-picker {
+    margin-bottom: 24px;
+  }
+  .upload-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+  }
+  .upload-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+  }
+  #image-upload {
+    display: none;
+  }
+  .image-canvas-wrapper {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(45, 55, 72, 0.6);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    display: none;
+  }
+  #image-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    cursor: crosshair;
+  }
+  .picker-tip {
+    text-align: center;
+    font-size: 12px;
+    color: #a0aec0;
+    margin-top: 8px;
+  }
+  /* 原有样式 */
+  .slider-group {
+    margin-bottom: 20px;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .slider-row label {
+    width: 60px;
+    font-size: 14px;
+    color: #a0aec0;
+    font-weight: 500;
+  }
+  .slider-row input[type="range"] {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, #2d3748, #4a5568);
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
+  }
+  .slider-value {
+    width: 50px;
+    text-align: right;
+    font-size: 14px;
+    color: #ffffff;
+    margin-left: 12px;
+    font-weight: 500;
+  }
+  .input-group {
+    margin-bottom: 20px;
+  }
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .input-row input {
+    flex: 1;
+    background: rgba(45, 55, 72, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 12px;
+    color: #ffffff;
+    font-size: 14px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .input-row input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(45, 55, 72, 0.8);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  }
+  .code-box {
+    background: rgba(15, 15, 23, 0.8);
+    padding: 18px;
+    border-radius: 12px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 16px;
+    color: #7cf498;
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .copyright {
+    text-align: center;
+    font-size: 12px;
+    color: #718096;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>ImGui RGBA 调色板</h2>
+  
+  <!-- 新增：图片上传取色区域 -->
+  <div class="image-picker">
+    <button class="upload-btn" id="upload-btn">上传图片取色</button>
+    <input type="file" id="image-upload" accept="image/*">
+    <div class="image-canvas-wrapper" id="canvas-wrapper">
+      <canvas id="image-canvas"></canvas>
+    </div>
+    <p class="picker-tip">点击图片任意位置拾取颜色</p>
+  </div>
+
+  <div class="color-preview-wrapper">
+    <div id="color-preview"></div>
+    <input type="color" id="color">
+  </div>
+
+  <div class="slider-group">
+    <div class="slider-row">
+      <label>Alpha</label>
+      <input type="range" id="alpha" min="0" max="100" value="100">
+      <span class="slider-value" id="a_val">1.00</span>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <div class="input-row">
+      <input type="number" id="r_in" placeholder="R" min="0" max="255">
+      <input type="number" id="g_in" placeholder="G" min="0" max="255">
+      <input type="number" id="b_in" placeholder="B" min="0" max="255">
+      <input type="number" id="a_in" placeholder="A" min="0" max="1" step="0.01">
+    </div>
+  </div>
+
+  <div class="code-box" id="code">
+ImVec4(1.000, 1.000, 1.000, 1.000)
+  </div>
+
+  <div class="copyright">
+    
+  </div>
+</div>
+
+<script>
+const colorEl = document.getElementById('color');
+const alphaEl = document.getElementById('alpha');
+const aValEl = document.getElementById('a_val');
+const codeEl = document.getElementById('code');
+const colorPreview = document.getElementById('color-preview');
+const rIn = document.getElementById('r_in');
+const gIn = document.getElementById('g_in');
+const bIn = document.getElementById('b_in');
+const aIn = document.getElementById('a_in');
+
+// 新增：图片取色相关元素
+const uploadBtn = document.getElementById('upload-btn');
+const imageUpload = document.getElementById('image-upload');
+const canvasWrapper = document.getElementById('canvas-wrapper');
+const imageCanvas = document.getElementById('image-canvas');
+const ctx = imageCanvas.getContext('2d');
+
+// 原有逻辑：从颜色选择器更新
+function updateFromColorPicker() {
+  const hex = colorEl.value;
+  const a = alphaEl.value / 100;
+  aValEl.textContent = a.toFixed(2);
+
+  const r = parseInt(hex.substr(1, 2), 16);
+  const g = parseInt(hex.substr(3, 2), 16);
+  const b = parseInt(hex.substr(5, 2), 16);
+
+  rIn.value = r;
+  gIn.value = g;
+  bIn.value = b;
+  aIn.value = a.toFixed(2);
+
+  updateCode(r, g, b, a);
+  updatePreview(r, g, b, a);
+}
+
+// 原有逻辑：从输入框更新
+function updateFromInput() {
+  const r = Math.max(0, Math.min(255, parseInt(rIn.value) || 0));
+  const g = Math.max(0, Math.min(255, parseInt(gIn.value) || 0));
+  const b = Math.max(0, Math.min(255, parseInt(bIn.value) || 0));
+  const a = Math.max(0, Math.min(1, parseFloat(aIn.value) || 1));
+
+  rIn.value = r;
+  gIn.value = g;
+  bIn.value = b;
+  aIn.value = a.toFixed(2);
+  alphaEl.value = a * 100;
+  aValEl.textContent = a.toFixed(2);
+
+  const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+  colorEl.value = hex;
+
+  updateCode(r, g, b, a);
+  updatePreview(r, g, b, a);
+}
+
+// 原有逻辑：更新代码和预览
+function updateCode(r, g, b, a) {
+  const rf = (r / 255).toFixed(3);
+  const gf = (g / 255).toFixed(3);
+  const bf = (b / 255).toFixed(3);
+  const af = a.toFixed(3);
+  codeEl.textContent = `ImVec4(${rf}, ${gf}, ${bf}, ${af})`;
+}
+
+function updatePreview(r, g, b, a) {
+  colorPreview.style.background = `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+// 新增：图片上传逻辑
+uploadBtn.addEventListener('click', () => {
+  imageUpload.click();
+});
+
+imageUpload.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const img = new Image();
+    img.onload = () => {
+      // 适配Canvas尺寸，保持比例
+      const wrapperWidth = canvasWrapper.clientWidth;
+      const wrapperHeight = canvasWrapper.clientHeight;
+      const imgRatio = img.width / img.height;
+      const wrapperRatio = wrapperWidth / wrapperHeight;
+
+      let drawWidth, drawHeight;
+      if (imgRatio > wrapperRatio) {
+        drawWidth = wrapperWidth;
+        drawHeight = wrapperWidth / imgRatio;
+      } else {
+        drawHeight = wrapperHeight;
+        drawWidth = wrapperHeight * imgRatio;
+      }
+
+      imageCanvas.width = drawWidth;
+      imageCanvas.height = drawHeight;
+      ctx.drawImage(img, 0, 0, drawWidth, drawHeight);
+      canvasWrapper.style.display = 'block';
+    };
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// 新增：图片点击取色逻辑
+imageCanvas.addEventListener('click', (e) => {
+  const rect = imageCanvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  // 获取像素数据
+  const pixel = ctx.getImageData(x, y, 1, 1).data;
+  const r = pixel[0];
+  const g = pixel[1];
+  const b = pixel[2];
+  const a = alphaEl.value / 100;
+
+  // 同步到调色板
+  rIn.value = r;
+  gIn.value = g;
+  bIn.value = b;
+  aIn.value = a.toFixed(2);
+  
+  const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+  colorEl.value = hex;
+
+  updateCode(r, g, b, a);
+  updatePreview(r, g, b, a);
+});
+
+// 原有事件监听
+colorEl.addEventListener('input', updateFromColorPicker);
+alphaEl.addEventListener('input', updateFromColorPicker);
+rIn.addEventListener('input', updateFromInput);
+gIn.addEventListener('input', updateFromInput);
+bIn.addEventListener('input', updateFromInput);
+aIn.addEventListener('input', updateFromInput);
+
+updateFromColorPicker();
+</script>
+</body>
+</html>
